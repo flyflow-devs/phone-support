@@ -1,0 +1,16 @@
+steps:
+  # Build the Docker image for the API
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/support-api', '-f', './api/Dockerfile', './api']
+    # If your Dockerfile is located in the `api` directory, the context should be the parent directory of `api`
+
+  # Push the image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/support-api']
+
+# Images to be stored in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/support-api'
+
+# Set the timeout for the build
+timeout: '1200s'  # 20 minutes
