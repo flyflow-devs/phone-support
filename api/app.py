@@ -36,6 +36,7 @@ def scrape_text(url, base_url, visited=None):
 
         links = [ensure_https(urljoin(url, link['href'])) for link in soup.find_all('a', href=True) if urlparse(urljoin(url, link['href'])).netloc == urlparse(base_url).netloc]
         with concurrent.futures.ThreadPoolExecutor() as executor:
+            print(visited)
             futures = [executor.submit(scrape_text, link, base_url, visited) for link in links]
             for future in concurrent.futures.as_completed(futures):
                 texts.append(future.result())
@@ -88,6 +89,8 @@ def create_agent():
         initial_message="Hi, this is Alice. How can I help?",
         llm_model="gpt-4o",
         voice_id="female-young-american-strong",
+        filler_words=True,
+        filler_words_whitelist=["Yeah.", "Hmm.", "Sure.", "Let me see.", "Alright.", "Well.", ""],
     )
 
     # Return the phone number as JSON
