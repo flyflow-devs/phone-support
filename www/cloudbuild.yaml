@@ -1,0 +1,16 @@
+steps:
+  # Build the Docker image for the www
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/support-www', '-f', './www/Dockerfile', './www']
+    # If your Dockerfile is located in the `www` directory, the context should be the parent directory of `www`
+
+  # Push the image to Google Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', 'gcr.io/$PROJECT_ID/support-www']
+
+# Images to be stored in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/support-www'
+
+# Set the timeout for the build
+timeout: '1200s'  # 20 minutes
