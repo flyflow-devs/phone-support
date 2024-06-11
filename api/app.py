@@ -10,6 +10,13 @@ import concurrent.futures
 app = Flask(__name__)
 CORS(app)
 
+# Helper function to ensure URLs have https schema
+def ensure_https(url):
+    parsed_url = urlparse(url)
+    if not parsed_url.scheme:
+        return f"https://{url}"
+    return url
+
 # Function to recursively scrape text from a URL
 def scrape_text(url, base_url, visited=None):
     if visited is None:
@@ -25,9 +32,9 @@ def scrape_text(url, base_url, visited=None):
         response = requests.get(url)
         response.raise_for_status()
         soup = BeautifulSoup(response.content, 'html.parser')
-        texts.append(' '.join(soup.stripped_strings).replace('\n', ' '))
+        texts.append('\n'.join(soup.stripped_strings))
 
-        links = [urljoin(url, link['href']) for link in soup.find_all('a', href=True) if urlparse(urljoin(url, link['href'])).netloc == urlparse(base_url).netloc]
+        links = [ensure_https(urljoin(url, link['href'])) for link in soup.find_all('a', href=True) if urlparse(urljoin(url, link['href'])).netloc == urlparse(base_url).netloc]
         with concurrent.futures.ThreadPoolExecutor() as executor:
             futures = [executor.submit(scrape_text, link, base_url, visited) for link in links]
             for future in concurrent.futures.as_completed(futures):
@@ -36,7 +43,14 @@ def scrape_text(url, base_url, visited=None):
     except Exception as e:
         texts.append(f"Error scraping {url}: {str(e)}")
 
-    return ' '.join(texts)
+    return '\n'.join(texts)
+
+# Function to remove duplicate paragraphs and truncate to 1,000,000 characters
+def process_text(text):
+    paragraphs = text.split('\n')
+    unique_paragraphs = list(dict.fromkeys(paragraphs))  # Remove duplicates while preserving order
+    unique_text = ' '.join(unique_paragraphs).replace('\n', ' ')
+    return unique_text[:1000000]  # Truncate to 1,000,000 characters
 
 # Endpoint to create a new Flyflow agent
 @app.route('/create_agent', methods=['POST'])
@@ -45,11 +59,13 @@ def create_agent():
     if 'urls' not in data:
         return jsonify({'error': 'Missing urls parameter'}), 400
 
-    urls = data['urls']
+    urls = [ensure_https(url) for url in data['urls']]
 
     with concurrent.futures.ThreadPoolExecutor() as executor:
         futures = [executor.submit(scrape_text, url, url) for url in urls]
-        customer_docs = " ".join(future.result() for future in concurrent.futures.as_completed(futures))
+        customer_docs = "\n".join(future.result() for future in concurrent.futures.as_completed(futures))
+
+    processed_docs = process_text(customer_docs)
 
     # Flyflow client initialization
     client = Flyflow(api_key='demo')
@@ -62,7 +78,7 @@ def create_agent():
         system_prompt=f"""
         You are an expert customer support agent
         
-        Customer docs: {customer_docs}
+        Customer docs: {processed_docs}
         
         Style Guide 
         - Respond to the user's answer to the previous questions with a full sentence responding to their answer before asking the next question
