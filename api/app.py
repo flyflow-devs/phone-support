@@ -34,9 +34,14 @@ def scrape_text(url, base_url, visited=None):
         soup = BeautifulSoup(response.content, 'html.parser')
         texts.append('\n'.join(soup.stripped_strings))
 
-        links = [ensure_https(urljoin(url, link['href'])) for link in soup.find_all('a', href=True) if urlparse(urljoin(url, link['href'])).netloc == urlparse(base_url).netloc]
+        # Adjust link processing to handle relative paths correctly
+        links = [
+            ensure_https(urljoin(base_url, link['href']))
+            for link in soup.find_all('a', href=True)
+            if urlparse(urljoin(base_url, link['href'])).netloc == urlparse(base_url).netloc
+        ]
+
         with concurrent.futures.ThreadPoolExecutor() as executor:
-            print(visited)
             futures = [executor.submit(scrape_text, link, base_url, visited) for link in links]
             for future in concurrent.futures.as_completed(futures):
                 texts.append(future.result())
@@ -84,12 +89,21 @@ def create_agent():
         Style Guide 
         - Respond to the user's answer to the previous questions with a full sentence responding to their answer before asking the next question
         - Only include one idea at a time in your response  
-        - *Do not include* lists of numbers or asterisks in your response *
+        - *Do not include* lists of numbers or asterisks in your response*
+        
+        Actions you can take:
+        - hangup - only do this once both the user and the assistant have said goodbye and the conversation has reached a logical ending point. Never say "hangup" or announce that you're hanging up
         """,
         initial_message="Hi, this is Alice. How can I help?",
         llm_model="gpt-4o",
         voice_id="female-young-american-strong",
         filler_words=True,
+        actions=[
+            {
+                "name": "hangup",
+                "instructions": "End the call after the user and assistant have said goodbye. Make sure to only call the hangup function once the assistant has responded!"
+            }
+        ],
         filler_words_whitelist=["Yeah.", "Hmm.", "Sure.", "Let me see.", "Alright.", "Well.", ""],
     )
 
