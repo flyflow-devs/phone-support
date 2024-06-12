@@ -29,11 +29,20 @@ def scrape_text(url, base_url, visited=None):
     texts = []
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+        'Accept-Encoding': 'gzip, deflate, br, zstd',
         'Accept-Language': 'en-US,en;q=0.9',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
-        'Connection': 'keep-alive'
+        'Cache-Control': 'max-age=0',
+        'Connection': 'keep-alive',
+        'Sec-Ch-Ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
+        'Sec-Ch-Ua-Mobile': '?0',
+        'Sec-Ch-Ua-Platform': '"macOS"',
+        'Sec-Fetch-Dest': 'document',
+        'Sec-Fetch-Mode': 'navigate',
+        'Sec-Fetch-Site': 'same-site',
+        'Sec-Fetch-User': '?1',
+        'Upgrade-Insecure-Requests': '1',
     }
 
     try:
@@ -54,8 +63,9 @@ def scrape_text(url, base_url, visited=None):
             for future in concurrent.futures.as_completed(futures):
                 texts.append(future.result())
 
-    except Exception as e:
-        texts.append(f"Error scraping {url}: {str(e)}")
+    except requests.exceptions.RequestException as e:
+        # Log the error and skip adding it to the texts
+        print(f"Error scraping {url}: {str(e)}")
 
     return '\n'.join(texts)
 
