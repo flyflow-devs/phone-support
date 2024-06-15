@@ -29,20 +29,6 @@ def scrape_text(url, base_url, visited=None):
     texts = []
 
     headers = {
-        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
-        'Accept-Encoding': 'gzip, deflate, br, zstd',
-        'Accept-Language': 'en-US,en;q=0.9',
-        'Cache-Control': 'max-age=0',
-        'Connection': 'keep-alive',
-        'Sec-Ch-Ua': '"Google Chrome";v="125", "Chromium";v="125", "Not.A/Brand";v="24"',
-        'Sec-Ch-Ua-Mobile': '?0',
-        'Sec-Ch-Ua-Platform': '"macOS"',
-        'Sec-Fetch-Dest': 'document',
-        'Sec-Fetch-Mode': 'navigate',
-        'Sec-Fetch-Site': 'same-site',
-        'Sec-Fetch-User': '?1',
-        'Upgrade-Insecure-Requests': '1',
     }
 
     try:
@@ -72,8 +58,10 @@ def scrape_text(url, base_url, visited=None):
 # Function to remove duplicate paragraphs and truncate to 1,000,000 characters
 def process_text(text):
     paragraphs = text.split('\n')
+    print(paragraphs)
     unique_paragraphs = list(dict.fromkeys(paragraphs))  # Remove duplicates while preserving order
     unique_text = ' '.join(unique_paragraphs).replace('\n', ' ')
+    print(unique_text)
     return unique_text[:1000000]  # Truncate to 1,000,000 characters
 
 # Endpoint to create a new Flyflow agent
